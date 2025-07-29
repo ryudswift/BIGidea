@@ -1,106 +1,202 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="theme-ubuntu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Genius Ideas Dashboard</title>
-    <!-- Tailwind CSS for rapid UI development -->
+    <title>Koerner's Genius Ideas Dashboard</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts for a modern look -->
+    <!-- Particles.js for background effects -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
+        /* --- Theme Definitions --- */
+        :root {
+            --bg-dark: #2c001e;
+            --text-main: #f2f2f2;
+            --text-muted: #d9d9d9;
+            --highlight-primary: #E95420;
+            --highlight-secondary: #dd4814;
+            --border-color: #58334d;
+            --particle-color: #E95420;
+            --particle-line-color: #58334d;
+            --bg-card-glass: rgba(59, 20, 47, 0.25);
+            --border-card-glass: rgba(233, 84, 32, 0.2);
+            --border-card-glow: rgba(233, 84, 32, 0.5);
+            --watched-border-color: rgba(74, 222, 128, 0.7); /* Green for watched */
+        }
+
+        .theme-pastel-terminal {
+            --bg-dark: #211F2C;
+            --text-main: #EAE6FF;
+            --text-muted: #b0a9d4;
+            --highlight-primary: #A48DFA;
+            --highlight-secondary: #8DFAAF;
+            --border-color: #403d52;
+            --particle-color: #A48DFA;
+            --particle-line-color: #403d52;
+            --bg-card-glass: rgba(42, 39, 57, 0.25);
+            --border-card-glass: rgba(164, 141, 250, 0.2);
+            --border-card-glow: rgba(164, 141, 250, 0.5);
+            --watched-border-color: rgba(141, 250, 175, 0.7);
+        }
+
+        .theme-light-fruity {
+            --bg-dark: #FFF9F2;
+            --text-main: #5D4037;
+            --text-muted: #795548;
+            --highlight-primary: #FF7043;
+            --highlight-secondary: #FFCA28;
+            --border-color: #FFCCBC;
+            --particle-color: #FF7043;
+            --particle-line-color: #FFCCBC;
+            --bg-card-glass: rgba(255, 255, 255, 0.4);
+            --border-card-glass: rgba(255, 112, 67, 0.3);
+            --border-card-glow: rgba(255, 112, 67, 0.6);
+            --watched-border-color: rgba(52, 211, 153, 0.8);
+        }
+
         /* --- Core Styles --- */
+        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111827; /* Dark gray background */
-            color: #F9FAFB; /* Light gray text */
+            font-family: 'Ubuntu', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            transition: background-color 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Ubuntu Mono', monospace; }
+        
+        /* --- Decorative Backgrounds --- */
+        .background-blobs {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            overflow: hidden; z-index: 0;
+        }
+        .background-blobs div {
+            position: absolute; border-radius: 50%;
+            filter: blur(120px); opacity: 0.4;
+            transition: background 0.5s ease;
+        }
+        .blob1 {
+            width: 450px; height: 450px; background: var(--highlight-primary);
+            top: -150px; left: -150px;
+        }
+        .blob2 {
+            width: 350px; height: 350px; background: var(--highlight-secondary);
+            bottom: -100px; right: -100px;
         }
 
-        /* --- 3D Card Effect (Warframe Inspired) --- */
+        #particles-js {
+            position: fixed; width: 100%; height: 100%;
+            top: 0; left: 0; z-index: 1;
+        }
+        .content-wrapper { position: relative; z-index: 2; }
+
+        /* --- Card Styles (Glassmorphism + 3D) --- */
         .video-card {
-            background-color: #1F2937; /* Slightly lighter gray for cards */
-            border: 1px solid #374151;
+            background: var(--bg-card-glass);
+            border: 1px solid var(--border-card-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 1rem;
             transform-style: preserve-3d;
-            transition: transform 0.1s linear, box-shadow 0.2s ease;
-            position: relative;
-            overflow: hidden; /* Hide the overflowing glow effect */
+            transition: transform 0.1s linear, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+            display: flex; flex-direction: column;
         }
-        
-        /* The moving glow effect */
-        .video-card::before {
-            content: '';
-            position: absolute;
-            top: var(--y, 0);
-            left: var(--x, 0);
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle, rgba(167, 139, 250, 0.4), transparent 60%);
-            transform: translate(-50%, -50%);
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-            pointer-events: none; /* Allows clicks to pass through */
+        .video-card:hover {
+            border-color: var(--border-card-glow);
+            box-shadow: 0 0 30px -10px var(--border-card-glow);
         }
-        
-        .video-card:hover::before {
-            opacity: 1;
-        }
-        
-        /* Styling for cards marked as 'watched' */
+
         .video-card.watched {
-            opacity: 0.6;
-            border-color: #4ade80; /* Green border for watched items */
-        }
-        
-        .video-card.watched .thumbnail-overlay {
-            opacity: 1;
+            opacity: 0.7;
+            border-color: var(--watched-border-color) !important;
         }
 
-        /* --- Thumbnail & Overlay Styles --- */
-        .thumbnail-container {
-            position: relative;
-        }
+        .highlight { color: var(--highlight-primary); }
         
-        .thumbnail-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(16, 185, 129, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none; /* Make it non-interactive */
+        /* --- Button Styles --- */
+        .action-button {
+            background-color: var(--highlight-primary);
+            color: var(--bg-dark);
+            font-family: 'Ubuntu Mono', monospace;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
+        .action-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+        }
+        .action-button:active { transform: translateY(-1px) scale(1.02); }
 
-        /* --- Filter Button Styles --- */
         .filter-btn {
-            background-color: #374151;
-            transition: all 0.2s ease;
-        }
-        .filter-btn:hover {
-            background-color: #4B5563;
+             background: var(--bg-card-glass);
+             border: 1px solid var(--border-card-glass);
+             color: var(--text-muted);
         }
         .filter-btn.active {
-            background-color: #8B5CF6; /* Violet for active filter */
-            color: white;
-            font-weight: 600;
+            background-color: var(--highlight-primary);
+            color: var(--bg-dark);
+            border-color: var(--border-color);
+            font-weight: 700;
         }
+
+        /* --- Loader Animation --- */
+        .loader-container {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 4rem;
+            font-family: 'Ubuntu Mono', monospace;
+            grid-column: 1 / -1;
+        }
+        .loader-svg {
+            width: 5rem; height: 5rem;
+            color: var(--highlight-primary);
+        }
+        .loader-svg .track { stroke: var(--border-color); }
+        .loader-svg .spinner {
+            transform-origin: center;
+            animation: spin 1.4s linear infinite;
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* --- Theme Switcher FAB --- */
+        #theme-fab-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100; }
+        #theme-fab-toggle {
+            width: 3.5rem; height: 3.5rem; border-radius: 50%;
+            background-color: var(--bg-card-glass);
+            border: 2px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        #theme-fab-toggle:hover { transform: scale(1.1) rotate(15deg); }
+        #theme-fab-icon { width: 1.5rem; height: 1.5rem; color: var(--highlight-primary); }
+
     </style>
 </head>
 <body class="antialiased">
+    <!-- Background Elements -->
+    <div class="background-blobs">
+        <div class="blob1"></div>
+        <div class="blob2"></div>
+    </div>
+    <div id="particles-js"></div>
 
-    <div class="container mx-auto p-4 md:p-8">
-        
-        <!-- Header Section -->
-        <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold text-white">Koerner's Genius Ideas</h1>
-            <p class="text-lg mt-2 text-gray-400">Your personal dashboard to track watched videos.</p>
+    <div class="content-wrapper container mx-auto p-4 md:p-8 max-w-7xl">
+        <!-- Header -->
+        <header class="text-center mb-12 pt-8 sm:pt-16">
+            <h1 class="text-4xl md:text-6xl font-bold">Genius Ideas Dashboard</h1>
+            <p class="text-lg mt-2" style="color: var(--text-muted);">Your personal tracker for Koerner's content.</p>
         </header>
 
         <!-- Filter Controls -->
@@ -111,12 +207,29 @@
         </div>
 
         <!-- Main Grid for Video Cards -->
-        <main id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <!-- Loader Placeholder -->
-            <p id="loader" class="col-span-full text-center text-gray-400">Loading genius ideas...</p>
-            <!-- Video cards will be dynamically injected here by JavaScript -->
+        <main id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+             <div id="loader" class="loader-container">
+                <svg class="loader-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle class="track" cx="12" cy="12" r="10" stroke-width="2"/>
+                    <path class="spinner" d="M12 2A10 10 0 0 1 22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <p class="text-xl highlight mt-4">Loading Genius Ideas...</p>
+            </div>
+            <!-- Cards injected here -->
         </main>
-        
+
+        <footer class="text-center mt-12 py-8 text-sm" style="color: var(--text-muted);">
+            <p>&copy; 2024 Dashboard | Track your content efficiently.</p>
+        </footer>
+    </div>
+
+    <!-- Theme Switcher -->
+    <div id="theme-fab-container">
+        <button id="theme-fab-toggle" title="Switch Theme">
+            <svg id="theme-fab-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402a3.75 3.75 0 00-5.304-5.304L4.098 14.6c-.39.39-.39 1.023 0 1.414l.495.495a1.875 1.875 0 010 2.652l-.495.495a1.875 1.875 0 01-2.652 0l-.495-.495a1.875 1.875 0 010-2.652l6.402-6.401a3.75 3.75 0 005.304 5.304l-6.402 6.401a3.75 3.75 0 00-5.304 0z" />
+            </svg>
+        </button>
     </div>
 
     <script>
@@ -125,195 +238,164 @@
             const loader = document.getElementById('loader');
             const filterControls = document.getElementById('filter-controls');
 
-            let allVideos = []; // Master list of all video data
-            let watchedState = {}; // Object to store watched status by ID
-            let currentFilter = 'all'; // 'all', 'watched', or 'unwatched'
+            let allVideos = [];
+            let watchedState = {};
+            let currentFilter = 'all';
 
             const DATASET_URL = './dataset/koernerDataset.json';
             const WATCHED_STORAGE_KEY = 'koernerWatchedVideos';
 
-            // --- Data Fetching and State Management ---
-
-            /**
-             * Loads the watched video states from localStorage.
-             */
-            function loadWatchedState() {
-                const storedState = localStorage.getItem(WATCHED_STORAGE_KEY);
-                watchedState = storedState ? JSON.parse(storedState) : {};
-            }
-
-            /**
-             * Saves the current watched video states to localStorage.
-             */
-            function saveWatchedState() {
+            // --- State Management ---
+            const loadWatchedState = () => {
+                const stored = localStorage.getItem(WATCHED_STORAGE_KEY);
+                watchedState = stored ? JSON.parse(stored) : {};
+            };
+            const saveWatchedState = () => {
                 localStorage.setItem(WATCHED_STORAGE_KEY, JSON.stringify(watchedState));
-            }
-            
-            /**
-             * Formats large numbers into a more readable format (e.g., 1.2M, 3.4K).
-             * @param {number} num - The number to format.
-             * @returns {string} The formatted number string.
-             */
-            function formatNumber(num) {
+            };
+             const formatNumber = num => {
                 if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
                 if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
                 return num.toString();
             }
 
             // --- UI Rendering ---
-
-            /**
-             * Creates the HTML for a single video card.
-             * @param {object} video - The video data object.
-             * @returns {string} The HTML string for the card.
-             */
-            function createVideoCardHTML(video) {
+            const createVideoCardHTML = (video) => {
                 const isWatched = !!watchedState[video.id];
                 const watchedClass = isWatched ? 'watched' : '';
-                const buttonText = isWatched ? 'Watched' : 'Mark as Watched';
-                const buttonBg = isWatched ? 'bg-green-600' : 'bg-violet-600 hover:bg-violet-700';
+                const buttonText = isWatched ? '✓ Watched' : 'Mark Watched';
 
-                // We create an anchor tag `<a>` that wraps the visual part of the card
-                // but not the "Watched" button, so they can have separate click actions.
                 return `
-                    <div class="video-card rounded-lg flex flex-col transition-all duration-300 ${watchedClass}" data-id="${video.id}">
-                        <a href="${video.videoUrl}" target="_blank" rel="noopener noreferrer" class="block">
-                            <div class="thumbnail-container">
-                                <img src="${video.thumbnailUrl}" alt="${video.caption}" class="rounded-t-lg w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1F2937/FFFFFF?text=No+Image';">
-                                <div class="thumbnail-overlay">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                    </svg>
+                    <div class="video-card ${watchedClass}" data-id="${video.id}" data-video-url="${video.videoUrl}">
+                        <a href="${video.videoUrl}" target="_blank" rel="noopener noreferrer" class="block group">
+                            <div class="overflow-hidden rounded-t-lg">
+                                <img src="${video.thumbnailUrl}" alt="${video.caption}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1a1a1a/ffffff?text=Video';">
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold highlight h-14 overflow-hidden">${video.caption}</h3>
+                                <div class="flex justify-between items-center text-sm mt-4" style="color: var(--text-muted);">
+                                    <span>❤️ ${formatNumber(video.likes)}</span>
+                                    <span>▶️ ${formatNumber(video.plays)}</span>
                                 </div>
                             </div>
-                            <div class="p-4 flex-grow">
-                                <p class="text-gray-300 text-sm leading-relaxed h-20 overflow-hidden">${video.caption}</p>
-                            </div>
                         </a>
-                        <div class="p-4 border-t border-gray-700 mt-auto">
-                           <div class="flex justify-between items-center text-sm text-gray-400 mb-4">
-                                <span>❤️ ${formatNumber(video.likes)}</span>
-                                <span>▶️ ${formatNumber(video.plays)}</span>
-                           </div>
-                           <button class="watch-toggle-btn w-full py-2 rounded-md text-white font-semibold transition-colors ${buttonBg}">${buttonText}</button>
+                        <div class="p-4 pt-0">
+                           <button class="watch-toggle-btn w-full action-button font-bold text-base">${buttonText}</button>
                         </div>
                     </div>
                 `;
-            }
+            };
 
-            /**
-             * Renders the video cards to the grid based on the current filter.
-             */
-            function renderVideos() {
-                // Filter the videos based on the current state
+            const renderVideos = () => {
                 const videosToRender = allVideos.filter(video => {
                     if (currentFilter === 'watched') return !!watchedState[video.id];
                     if (currentFilter === 'unwatched') return !watchedState[video.id];
-                    return true; // 'all'
+                    return true;
                 });
+                
+                if (loader) loader.style.display = 'none';
 
                 if (videosToRender.length === 0) {
-                    grid.innerHTML = `<p class="col-span-full text-center text-gray-400">No videos found for this filter.</p>`;
+                    grid.innerHTML = `<p class="col-span-full text-center" style="color: var(--text-muted);">No videos for this filter.</p>`;
                 } else {
                     grid.innerHTML = videosToRender.map(createVideoCardHTML).join('');
                 }
                 
-                // After rendering, re-attach event listeners
-                addCardEventListeners();
-            }
+                init3dCards();
+                addToggleListeners();
+            };
 
-            // --- Event Handling ---
-
-            /**
-             * Adds all necessary event listeners to the cards and controls.
-             */
-            function addCardEventListeners() {
-                // 3D Tilt Effect
+            // --- Event Listeners ---
+            const init3dCards = () => {
                 document.querySelectorAll('.video-card').forEach(card => {
                     card.addEventListener('mousemove', (e) => {
-                        const { left, top, width, height } = card.getBoundingClientRect();
+                        const { width, height, left, top } = card.getBoundingClientRect();
                         const x = e.clientX - left;
                         const y = e.clientY - top;
-                        
-                        // Calculate rotation values
-                        const rotateX = (y - height / 2) / (height / 2) * -10; // Max rotation 10deg
-                        const rotateY = (x - width / 2) / (width / 2) * 10;
-                        
-                        // Apply transform
+                        const maxRotate = 8;
+                        const rotateX = ((y - height / 2) / (height / 2) * -maxRotate).toFixed(2);
+                        const rotateY = ((x - width / 2) / (width / 2) * maxRotate).toFixed(2);
                         card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
-                        card.style.boxShadow = '0 15px 30px rgba(0,0,0,0.4)';
-
-                        // Update glow position via CSS variables
-                        card.style.setProperty('--x', `${e.pageX - window.scrollX - card.offsetLeft}px`);
-                        card.style.setProperty('--y', `${e.pageY - window.scrollY - card.offsetTop}px`);
                     });
-
                     card.addEventListener('mouseleave', () => {
-                        // Reset card to its original state
                         card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
-                        card.style.boxShadow = 'none';
                     });
                 });
-                
-                // Watched Toggle Button
-                document.querySelectorAll('.watch-toggle-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const cardElement = e.target.closest('.video-card');
-                        const videoId = cardElement.dataset.id;
-                        
-                        // Toggle the state
-                        if (watchedState[videoId]) {
-                            delete watchedState[videoId];
-                        } else {
-                            watchedState[videoId] = true;
-                        }
-                        
-                        saveWatchedState(); // Persist the change
-                        renderVideos();     // Re-render the UI to reflect the new state
-                    });
-                });
-            }
+            };
 
-            // Filter Control Logic
-            filterControls.addEventListener('click', (e) => {
+            const addToggleListeners = () => {
+                 document.querySelectorAll('.watch-toggle-btn').forEach(button => {
+                    button.addEventListener('click', e => {
+                        e.stopPropagation(); // Prevent card's link from opening
+                        const card = e.target.closest('.video-card');
+                        const videoId = card.dataset.id;
+                        watchedState[videoId] = !watchedState[videoId];
+                        if (!watchedState[videoId]) delete watchedState[videoId];
+                        saveWatchedState();
+                        renderVideos();
+                    });
+                });
+            };
+
+            filterControls.addEventListener('click', e => {
                 if (e.target.tagName === 'BUTTON') {
-                    // Update active button style
                     filterControls.querySelector('.active').classList.remove('active');
                     e.target.classList.add('active');
-                    
-                    // Update filter and re-render
                     currentFilter = e.target.dataset.filter;
                     renderVideos();
                 }
             });
 
-            // --- Main Initialization ---
+            // --- Theme Management ---
+            const themes = ['theme-ubuntu', 'theme-pastel-terminal', 'theme-light-fruity'];
+            const themeData = {
+                'theme-ubuntu': { particleColor: '#E95420', lineColor: '#58334d' },
+                'theme-pastel-terminal': { particleColor: '#A48DFA', lineColor: '#403d52' },
+                'theme-light-fruity': { particleColor: '#FF7043', lineColor: '#FFCCBC' },
+            };
+            let currentThemeIndex = 0;
 
-            /**
-             * Initializes the application by fetching data and rendering the UI.
-             */
-            async function init() {
-                try {
-                    loadWatchedState();
-                    const response = await fetch(DATASET_URL);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    allVideos = await response.json();
-                    
-                    // Sort videos by date, newest first
-                    allVideos.sort((a, b) => new Date(b.publishedDate) - new Date(a.publishedDate));
-
-                    loader.style.display = 'none'; // Hide loader
-                    renderVideos();
-                } catch (error) {
-                    loader.style.display = 'none';
-                    grid.innerHTML = `<p class="col-span-full text-center text-red-400">Failed to load video data. Please check if 'dataset/koernerDataset.json' exists and is correctly formatted.</p>`;
-                    console.error("Error fetching or parsing data:", error);
+            const loadParticles = (theme) => {
+                if (window.pJSDom && window.pJSDom.length > 0) {
+                    window.pJSDom[0].pJS.fn.vendors.destroypJS();
+                    window.pJSDom = [];
                 }
+                particlesJS('particles-js', {
+                    "particles": { "number": { "value": 50, "density": { "enable": true, "value_area": 800 } }, "color": { "value": themeData[theme].particleColor }, "shape": { "type": "circle" }, "opacity": { "value": 0.5, "random": false }, "size": { "value": 3, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": themeData[theme].lineColor, "opacity": 0.4, "width": 1 }, "move": { "enable": true, "speed": 1, "direction": "none", "out_mode": "out" } }, "interactivity": { "detect_on": "canvas", "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": false } } }, "retina_detect": true
+                });
             }
 
-            // Start the application
+            const setTheme = (themeName) => {
+                document.documentElement.className = themeName;
+                localStorage.setItem('dashboard-theme', themeName);
+                currentThemeIndex = themes.indexOf(themeName);
+                loadParticles(themeName);
+            }
+
+            document.getElementById('theme-fab-toggle').addEventListener('click', () => {
+                currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+                setTheme(themes[currentThemeIndex]);
+            });
+
+            // --- Initialization ---
+            const init = async () => {
+                const savedTheme = localStorage.getItem('dashboard-theme') || 'theme-ubuntu';
+                setTheme(savedTheme);
+                
+                loadWatchedState();
+                try {
+                    const response = await fetch(DATASET_URL);
+                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                    allVideos = await response.json();
+                    allVideos.sort((a, b) => new Date(b.publishedDate) - new Date(a.publishedDate));
+                    renderVideos();
+                } catch (error) {
+                    if (loader) loader.style.display = 'none';
+                    grid.innerHTML = `<p class="col-span-full text-center text-red-400">Failed to load data. Please ensure the file exists at '${DATASET_URL}'.</p>`;
+                    console.error("Initialization Error:", error);
+                }
+            };
+
             init();
         });
     </script>
