@@ -1,1 +1,321 @@
-rtest
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genius Ideas Dashboard</title>
+    <!-- Tailwind CSS for rapid UI development -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for a modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Core Styles --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Dark gray background */
+            color: #F9FAFB; /* Light gray text */
+        }
+
+        /* --- 3D Card Effect (Warframe Inspired) --- */
+        .video-card {
+            background-color: #1F2937; /* Slightly lighter gray for cards */
+            border: 1px solid #374151;
+            transform-style: preserve-3d;
+            transition: transform 0.1s linear, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden; /* Hide the overflowing glow effect */
+        }
+        
+        /* The moving glow effect */
+        .video-card::before {
+            content: '';
+            position: absolute;
+            top: var(--y, 0);
+            left: var(--x, 0);
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.4), transparent 60%);
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none; /* Allows clicks to pass through */
+        }
+        
+        .video-card:hover::before {
+            opacity: 1;
+        }
+        
+        /* Styling for cards marked as 'watched' */
+        .video-card.watched {
+            opacity: 0.6;
+            border-color: #4ade80; /* Green border for watched items */
+        }
+        
+        .video-card.watched .thumbnail-overlay {
+            opacity: 1;
+        }
+
+        /* --- Thumbnail & Overlay Styles --- */
+        .thumbnail-container {
+            position: relative;
+        }
+        
+        .thumbnail-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(16, 185, 129, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none; /* Make it non-interactive */
+        }
+
+        /* --- Filter Button Styles --- */
+        .filter-btn {
+            background-color: #374151;
+            transition: all 0.2s ease;
+        }
+        .filter-btn:hover {
+            background-color: #4B5563;
+        }
+        .filter-btn.active {
+            background-color: #8B5CF6; /* Violet for active filter */
+            color: white;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <!-- Header Section -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-white">Koerner's Genius Ideas</h1>
+            <p class="text-lg mt-2 text-gray-400">Your personal dashboard to track watched videos.</p>
+        </header>
+
+        <!-- Filter Controls -->
+        <div id="filter-controls" class="flex justify-center items-center space-x-2 md:space-x-4 mb-8">
+            <button data-filter="all" class="filter-btn active px-4 py-2 rounded-lg text-sm md:text-base">All</button>
+            <button data-filter="unwatched" class="filter-btn px-4 py-2 rounded-lg text-sm md:text-base">Unwatched</button>
+            <button data-filter="watched" class="filter-btn px-4 py-2 rounded-lg text-sm md:text-base">Watched</button>
+        </div>
+
+        <!-- Main Grid for Video Cards -->
+        <main id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Loader Placeholder -->
+            <p id="loader" class="col-span-full text-center text-gray-400">Loading genius ideas...</p>
+            <!-- Video cards will be dynamically injected here by JavaScript -->
+        </main>
+        
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('video-grid');
+            const loader = document.getElementById('loader');
+            const filterControls = document.getElementById('filter-controls');
+
+            let allVideos = []; // Master list of all video data
+            let watchedState = {}; // Object to store watched status by ID
+            let currentFilter = 'all'; // 'all', 'watched', or 'unwatched'
+
+            const DATASET_URL = './dataset/koernerDataset.json';
+            const WATCHED_STORAGE_KEY = 'koernerWatchedVideos';
+
+            // --- Data Fetching and State Management ---
+
+            /**
+             * Loads the watched video states from localStorage.
+             */
+            function loadWatchedState() {
+                const storedState = localStorage.getItem(WATCHED_STORAGE_KEY);
+                watchedState = storedState ? JSON.parse(storedState) : {};
+            }
+
+            /**
+             * Saves the current watched video states to localStorage.
+             */
+            function saveWatchedState() {
+                localStorage.setItem(WATCHED_STORAGE_KEY, JSON.stringify(watchedState));
+            }
+            
+            /**
+             * Formats large numbers into a more readable format (e.g., 1.2M, 3.4K).
+             * @param {number} num - The number to format.
+             * @returns {string} The formatted number string.
+             */
+            function formatNumber(num) {
+                if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+                if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+                return num.toString();
+            }
+
+            // --- UI Rendering ---
+
+            /**
+             * Creates the HTML for a single video card.
+             * @param {object} video - The video data object.
+             * @returns {string} The HTML string for the card.
+             */
+            function createVideoCardHTML(video) {
+                const isWatched = !!watchedState[video.id];
+                const watchedClass = isWatched ? 'watched' : '';
+                const buttonText = isWatched ? 'Watched' : 'Mark as Watched';
+                const buttonBg = isWatched ? 'bg-green-600' : 'bg-violet-600 hover:bg-violet-700';
+
+                // We create an anchor tag `<a>` that wraps the visual part of the card
+                // but not the "Watched" button, so they can have separate click actions.
+                return `
+                    <div class="video-card rounded-lg flex flex-col transition-all duration-300 ${watchedClass}" data-id="${video.id}">
+                        <a href="${video.videoUrl}" target="_blank" rel="noopener noreferrer" class="block">
+                            <div class="thumbnail-container">
+                                <img src="${video.thumbnailUrl}" alt="${video.caption}" class="rounded-t-lg w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1F2937/FFFFFF?text=No+Image';">
+                                <div class="thumbnail-overlay">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="p-4 flex-grow">
+                                <p class="text-gray-300 text-sm leading-relaxed h-20 overflow-hidden">${video.caption}</p>
+                            </div>
+                        </a>
+                        <div class="p-4 border-t border-gray-700 mt-auto">
+                           <div class="flex justify-between items-center text-sm text-gray-400 mb-4">
+                                <span>❤️ ${formatNumber(video.likes)}</span>
+                                <span>▶️ ${formatNumber(video.plays)}</span>
+                           </div>
+                           <button class="watch-toggle-btn w-full py-2 rounded-md text-white font-semibold transition-colors ${buttonBg}">${buttonText}</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            /**
+             * Renders the video cards to the grid based on the current filter.
+             */
+            function renderVideos() {
+                // Filter the videos based on the current state
+                const videosToRender = allVideos.filter(video => {
+                    if (currentFilter === 'watched') return !!watchedState[video.id];
+                    if (currentFilter === 'unwatched') return !watchedState[video.id];
+                    return true; // 'all'
+                });
+
+                if (videosToRender.length === 0) {
+                    grid.innerHTML = `<p class="col-span-full text-center text-gray-400">No videos found for this filter.</p>`;
+                } else {
+                    grid.innerHTML = videosToRender.map(createVideoCardHTML).join('');
+                }
+                
+                // After rendering, re-attach event listeners
+                addCardEventListeners();
+            }
+
+            // --- Event Handling ---
+
+            /**
+             * Adds all necessary event listeners to the cards and controls.
+             */
+            function addCardEventListeners() {
+                // 3D Tilt Effect
+                document.querySelectorAll('.video-card').forEach(card => {
+                    card.addEventListener('mousemove', (e) => {
+                        const { left, top, width, height } = card.getBoundingClientRect();
+                        const x = e.clientX - left;
+                        const y = e.clientY - top;
+                        
+                        // Calculate rotation values
+                        const rotateX = (y - height / 2) / (height / 2) * -10; // Max rotation 10deg
+                        const rotateY = (x - width / 2) / (width / 2) * 10;
+                        
+                        // Apply transform
+                        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
+                        card.style.boxShadow = '0 15px 30px rgba(0,0,0,0.4)';
+
+                        // Update glow position via CSS variables
+                        card.style.setProperty('--x', `${e.pageX - window.scrollX - card.offsetLeft}px`);
+                        card.style.setProperty('--y', `${e.pageY - window.scrollY - card.offsetTop}px`);
+                    });
+
+                    card.addEventListener('mouseleave', () => {
+                        // Reset card to its original state
+                        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+                        card.style.boxShadow = 'none';
+                    });
+                });
+                
+                // Watched Toggle Button
+                document.querySelectorAll('.watch-toggle-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const cardElement = e.target.closest('.video-card');
+                        const videoId = cardElement.dataset.id;
+                        
+                        // Toggle the state
+                        if (watchedState[videoId]) {
+                            delete watchedState[videoId];
+                        } else {
+                            watchedState[videoId] = true;
+                        }
+                        
+                        saveWatchedState(); // Persist the change
+                        renderVideos();     // Re-render the UI to reflect the new state
+                    });
+                });
+            }
+
+            // Filter Control Logic
+            filterControls.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    // Update active button style
+                    filterControls.querySelector('.active').classList.remove('active');
+                    e.target.classList.add('active');
+                    
+                    // Update filter and re-render
+                    currentFilter = e.target.dataset.filter;
+                    renderVideos();
+                }
+            });
+
+            // --- Main Initialization ---
+
+            /**
+             * Initializes the application by fetching data and rendering the UI.
+             */
+            async function init() {
+                try {
+                    loadWatchedState();
+                    const response = await fetch(DATASET_URL);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    allVideos = await response.json();
+                    
+                    // Sort videos by date, newest first
+                    allVideos.sort((a, b) => new Date(b.publishedDate) - new Date(a.publishedDate));
+
+                    loader.style.display = 'none'; // Hide loader
+                    renderVideos();
+                } catch (error) {
+                    loader.style.display = 'none';
+                    grid.innerHTML = `<p class="col-span-full text-center text-red-400">Failed to load video data. Please check if 'dataset/koernerDataset.json' exists and is correctly formatted.</p>`;
+                    console.error("Error fetching or parsing data:", error);
+                }
+            }
+
+            // Start the application
+            init();
+        });
+    </script>
+</body>
+</html>
