@@ -254,6 +254,7 @@
                 localStorage.setItem(WATCHED_STORAGE_KEY, JSON.stringify(watchedState));
             };
              const formatNumber = num => {
+                if (!num) return '0';
                 if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
                 if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
                 return num.toString();
@@ -269,13 +270,13 @@
                     <div class="video-card ${watchedClass}" data-id="${video.id}" data-video-url="${video.videoUrl}">
                         <a href="${video.videoUrl}" target="_blank" rel="noopener noreferrer" class="block group">
                             <div class="overflow-hidden rounded-t-lg">
-                                <img src="${video.thumbnailUrl}" alt="${video.caption}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1a1a1a/ffffff?text=Video';">
+                                <img src="${video.displayUrl}" alt="${video.caption}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1a1a1a/ffffff?text=Video';">
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold highlight h-14 overflow-hidden">${video.caption}</h3>
                                 <div class="flex justify-between items-center text-sm mt-4" style="color: var(--text-muted);">
-                                    <span>❤️ ${formatNumber(video.likes)}</span>
-                                    <span>▶️ ${formatNumber(video.plays)}</span>
+                                    <span>❤️ ${formatNumber(video.likesCount)}</span>
+                                    <span>▶️ ${formatNumber(video.videoPlayCount)}</span>
                                 </div>
                             </div>
                         </a>
@@ -387,7 +388,8 @@
                     const response = await fetch(DATASET_URL);
                     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                     allVideos = await response.json();
-                    allVideos.sort((a, b) => new Date(b.publishedDate) - new Date(a.publishedDate));
+                    // Sort videos by date (timestamp), newest first
+                    allVideos.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     renderVideos();
                 } catch (error) {
                     if (loader) loader.style.display = 'none';
