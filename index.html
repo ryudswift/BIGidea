@@ -285,7 +285,7 @@
                 const watchedClass = isWatched ? 'watched' : '';
                 const buttonText = isWatched ? '✓ Watched' : 'Mark Watched';
 
-                // *** CHANGE: Using video.displayUrl based on your JSON sample ***
+                // Using video.displayUrl as the primary image source.
                 return `
                     <div class="video-card ${watchedClass}" data-id="${video.id}">
                         <a href="${video.url}" target="_blank" rel="noopener noreferrer" class="block group">
